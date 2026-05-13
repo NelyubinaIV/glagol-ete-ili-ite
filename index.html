@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Выбери правильную дверь: Е или И</title>
+  <style>
+    :root {
+      /*
+        КАРТИНКИ:
+        1) Фон 16:9 положите рядом с HTML и назовите background-16x9.jpg
+           или замените путь ниже в --bg-image.
+        2) Картинку двери положите рядом с HTML и назовите door.png
+           или замените путь ниже в --door-image.
+
+        ЗВУКИ:
+        Положите рядом с HTML свои звуки и назовите их так:
+        correct.mp3 — звук правильного ответа;
+        wrong.mp3 — звук неправильного ответа;
+        fanfare.mp3 — финальные фанфары на результат.
+      */
+      --bg-image: url("background.jpg");
+      --door-image: url("door.png");
+      --bg1: #ffefd5;
+      --bg2: #c9f2ff;
+      --ink: #2f2a3d;
+      --accent: #ff8a3d;
+      --green: #38b86b;
+      --red: #ef5350;
+      --blue: #4a90e2;
+      --card: rgba(255, 255, 255, 0.92);
+      --shadow: 0 18px 40px rgba(82, 60, 38, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        var(--bg-image) center center / cover no-repeat fixed,
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      overflow-x: hidden;
+    }
+
+    .scene {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      position: relative;
+    }
+
+    .game {
+      width: min(1100px, 100%);
+      background: var(--card);
+      backdrop-filter: blur(3px);
+      border: 6px solid #ffffff;
+      border-radius: 34px;
+      box-shadow: var(--shadow);
+      padding: 26px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .title-wrap { display: flex; align-items: center; gap: 14px; }
+
+    .mascot {
+      width: 70px;
+      height: 70px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #ffd166, #ff8a3d);
+      display: grid;
+      place-items: center;
+      font-size: 38px;
+      box-shadow: 0 8px 0 #d66a2f;
+      transform: rotate(-5deg);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 42px);
+      line-height: 1.05;
+      color: #2c3159;
+    }
+
+    .subtitle {
+      margin: 7px 0 0;
+      font-size: 18px;
+      color: #665f72;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      background: #fff1a8;
+      border: 3px solid #f1c84b;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 800;
+      color: #8a5a00;
+      box-shadow: 0 5px 0 #dfb43a;
+      white-space: nowrap;
+    }
+
+    .progress-shell {
+      width: 100%;
+      height: 16px;
+      background: #e9eef7;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 2px solid #fff;
+      margin: 12px 0 22px;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #62d86b, #3aa8ff);
+      border-radius: 999px;
+      transition: width .35s ease;
+    }
+
+    .task-card {
+      background: #fff;
+      border-radius: 28px;
+      border: 4px solid #e8f3ff;
+      padding: 24px;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .task-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .task-number {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      background: var(--blue);
+      border-radius: 18px;
+      padding: 9px 16px;
+      box-shadow: 0 5px 0 #2b6fbd;
+    }
+
+    .hint-pill {
+      font-size: 16px;
+      font-weight: 700;
+      color: #5d4a2d;
+      background: #fff2d8;
+      border: 2px dashed #ffc165;
+      border-radius: 18px;
+      padding: 8px 14px;
+      text-align: right;
+    }
+
+    .sentence-box {
+      width: min(920px, 100%);
+      margin: 0 auto 16px;
+      background: rgba(255, 250, 240, .96);
+      border: 4px solid rgba(255, 204, 91, .95);
+      border-radius: 24px;
+      padding: 18px 22px;
+      text-align: center;
+      font-size: clamp(26px, 3.5vw, 42px);
+      line-height: 1.25;
+      font-weight: 900;
+      color: #2c3159;
+      box-shadow: 0 8px 0 rgba(130, 83, 27, .20);
+    }
+
+    .missing {
+      display: inline-block;
+      min-width: 52px;
+      color: #ff7a2f;
+      letter-spacing: 2px;
+    }
+
+    .doors {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      align-items: end;
+      margin-top: 4px;
+    }
+
+    .door-button {
+      appearance: none;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      text-align: center;
+      transition: transform .15s ease, filter .15s ease;
+      outline: none;
+    }
+
+    .door-button:hover { transform: translateY(-5px); filter: brightness(1.04); }
+    .door-button:active { transform: translateY(0); }
+    .door-button:disabled { cursor: default; }
+
+    .door {
+      min-height: 380px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      overflow: visible;
+      background: transparent;
+      filter: drop-shadow(0 18px 16px rgba(0,0,0,.24));
+    }
+
+    .door-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center bottom;
+      z-index: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .letter-badge {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      top: 48%;
+      transform: translate(-50%, -50%);
+      width: clamp(86px, 11vw, 126px);
+      height: clamp(86px, 11vw, 126px);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 250, 240, .93);
+      border: 6px solid #ffc95a;
+      color: #2c3159;
+      font-size: clamp(52px, 7vw, 84px);
+      font-weight: 1000;
+      line-height: 1;
+      box-shadow: 0 8px 0 rgba(130, 83, 27, .28), 0 0 22px rgba(255, 215, 94, .55);
+      text-shadow: 0 2px 0 rgba(255,255,255,.7);
+    }
+
+    .feedback {
+      min-height: 84px;
+      margin-top: 18px;
+      border-radius: 20px;
+      padding: 16px 18px;
+      font-size: 20px;
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feedback.good {
+      display: flex;
+      background: #dcf8e7;
+      border: 3px solid #79d69b;
+      color: #1f7a45;
+    }
+
+    .feedback.bad {
+      display: flex;
+      background: #ffe3e1;
+      border: 3px solid #ff9690;
+      color: #a4332d;
+    }
+
+    .feedback .emoji { font-size: 32px; }
+    .feedback small { display: block; font-size: 16px; font-weight: 700; margin-top: 4px; color: inherit; opacity: .88; }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .control-btn {
+      border: none;
+      border-radius: 18px;
+      padding: 14px 20px;
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      background: linear-gradient(135deg, #ff8a3d, #ff5c7a);
+      box-shadow: 0 6px 0 #c64358;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .control-btn:hover { transform: translateY(-3px); }
+    .control-btn:disabled { opacity: .45; cursor: default; transform: none; }
+
+    .score {
+      font-size: 19px;
+      font-weight: 900;
+      color: #2c3159;
+      background: #eef6ff;
+      border: 3px solid #d7ebff;
+      border-radius: 18px;
+      padding: 12px 16px;
+    }
+
+    .finish {
+      display: none;
+      text-align: center;
+      background: #ffffff;
+      border-radius: 28px;
+      border: 4px solid #e8f3ff;
+      padding: 42px 24px;
+      min-height: 520px;
+      place-items: center;
+    }
+
+    .finish.show { display: grid; }
+    .task-card.hide { display: none; }
+
+    .finish-emoji { font-size: 76px; margin-bottom: 10px; }
+    .finish h2 { font-size: clamp(30px, 5vw, 52px); margin: 0 0 10px; color: #2c3159; }
+    .finish p { font-size: 22px; margin: 8px 0 24px; color: #665f72; }
+
+    .open-animation .door { animation: openDoor .7s ease both; }
+
+    @keyframes openDoor {
+      0% { transform: perspective(700px) rotateY(0deg); transform-origin: left center; }
+      100% { transform: perspective(700px) rotateY(-28deg); transform-origin: left center; filter: brightness(1.15); }
+    }
+
+    .shake .door { animation: shake .35s ease both; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-5px); }
+    }
+
+    @media (max-width: 760px) {
+      .top, .task-head, .controls { flex-direction: column; align-items: stretch; }
+      .badge, .hint-pill, .score { text-align: center; }
+      .doors { grid-template-columns: 1fr; }
+      .door { min-height: 320px; }
+      .game { padding: 16px; border-radius: 24px; }
+      .task-card { padding: 16px; }
+      .sentence-box { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <section class="game" aria-label="Интерактивная игра по русскому языку">
+      <div class="top">
+        <div class="title-wrap">
+          <div class="mascot" aria-hidden="true">🔑</div>
+          <div>
+            <h1>Выбери правильную дверь</h1>
+            <p class="subtitle">Вставь букву: <b>Е</b> или <b>И</b></p>
+          </div>
+        </div>
+        <div class="badge">6 класс · русский язык</div>
+      </div>
+
+      <div class="progress-shell" aria-label="Прогресс игры">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="task-card" id="taskCard">
+        <div>
+          <div class="task-head">
+            <div class="task-number" id="taskNumber">Задание 1 из 10</div>
+            <div class="hint-pill">Нажми на правильную дверь.</div>
+          </div>
+
+          <div class="sentence-box" id="sentenceBox"></div>
+          <div class="doors" id="doors"></div>
+          <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="controls">
+          <button class="control-btn" id="nextBtn" disabled>Следующее задание →</button>
+          <div class="score" id="scoreBox">Верно: 0</div>
+        </div>
+      </div>
+
+      <div class="finish" id="finishScreen">
+        <div>
+          <div class="finish-emoji">🏆</div>
+          <h2>Двери открыты!</h2>
+          <p id="finalText">Вы справились с заданием.</p>
+          <button class="control-btn" id="restartBtn">Пройти ещё раз</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!--
+    ЗВУКИ ДЛЯ ИГРЫ
+    Просто положите рядом с этим HTML-файлом свои аудиофайлы с такими названиями:
+    1) correct.mp3 — звук правильного ответа;
+    2) wrong.mp3 — звук неправильного ответа;
+    3) fanfare.mp3 — финальный звук фанфар.
+
+    Если ваши файлы называются иначе, замените названия в src ниже.
+    Например: src="sounds/correct-answer.wav"
+  -->
+  <audio id="correctSound" src="correct.mp3" preload="auto"></audio>
+  <audio id="wrongSound" src="wrong.mp3" preload="auto"></audio>
+  <audio id="fanfareSound" src="fanfare.mp3" preload="auto"></audio>
+
+  <script>
+    const originalTasks = [
+      {
+        sentence: "Если вы раскол...те старый орех, внутри найдёте потемневшее ядро.",
+        correct: "Е",
+        word: "расколете",
+        explain: "Верно: «расколете» — изъявительное наклонение, I спряжение."
+      },
+      {
+        sentence: "Запиш...те ответ разборчиво!",
+        correct: "И",
+        word: "запишите",
+        explain: "Верно: «запишите» — повелительное наклонение."
+      },
+      {
+        sentence: "На рассвете вы выйд...те к реке и увидите, как поднимается туман.",
+        correct: "Е",
+        word: "выйдете",
+        explain: "Верно: «выйдете» — изъявительное наклонение, будущее время."
+      },
+      {
+        sentence: "Вымет...те сухие листья с крыльца, чтобы дом встретил гостей чистотой.",
+        correct: "И",
+        word: "выметите",
+        explain: "Верно: «выметите» — просьба или приказ, повелительное наклонение."
+      },
+      {
+        sentence: "К вечеру вы выпол...те сорную траву у калитки, и дорожка станет светлее.",
+        correct: "Е",
+        word: "выполете",
+        explain: "Верно: «выполете» — изъявительное наклонение, I спряжение."
+      },
+      {
+        sentence: "Дыш...те глубже: этот лес словно лечит усталую душу.",
+        correct: "И",
+        word: "дышите",
+        explain: "Верно: «дышите» — повелительное наклонение."
+      },
+      {
+        sentence: "Когда вы заглян...те в старый сад, вам покажется, что время остановилось.",
+        correct: "Е",
+        word: "заглянете",
+        explain: "Верно: «заглянете» — изъявительное наклонение, будущее время."
+      },
+      {
+        sentence: "Скаж...те ответ громко и чётко!",
+        correct: "И",
+        word: "скажите",
+        explain: "Верно: «скажите» — повелительное наклонение."
+      },
+      {
+        sentence: "Вы вид...те ошибку в этом предложении?",
+        correct: "И",
+        word: "видите",
+        explain: "Верно: «видите» — изъявительное наклонение, II спряжение."
+      },
+      {
+        sentence: "В сосновом бору вы дыш...те смолистым воздухом и чувствуете спокойствие.",
+        correct: "И",
+        word: "дышите",
+        explain: "Верно: «дышите» — изъявительное наклонение, II спряжение."
+      }
+    ];
+
+    // Перемешивание заданий при каждом новом прохождении.
+    // Исходный массив originalTasks не меняем, а создаём новую случайную копию.
+    function shuffleTasks(source) {
+      const shuffled = [...source];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    let tasks = shuffleTasks(originalTasks);
+
+    const letters = ["Е", "И"]; // постоянное расположение: слева Е, справа И
+    let current = 0;
+    let score = 0;
+    let answered = false;
+
+    const taskNumber = document.getElementById("taskNumber");
+    const sentenceBox = document.getElementById("sentenceBox");
+    const doors = document.getElementById("doors");
+    const feedback = document.getElementById("feedback");
+    const nextBtn = document.getElementById("nextBtn");
+    const scoreBox = document.getElementById("scoreBox");
+    const progressBar = document.getElementById("progressBar");
+    const taskCard = document.getElementById("taskCard");
+    const finishScreen = document.getElementById("finishScreen");
+    const finalText = document.getElementById("finalText");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // ЗВУКИ: здесь подключаются аудио из тегов <audio> выше.
+    // Можно заменить файлы в HTML: correct.mp3, wrong.mp3, fanfare.mp3.
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+    const fanfareSound = document.getElementById("fanfareSound");
+
+    function playSound(sound) {
+      if (!sound) return;
+      sound.currentTime = 0;
+      sound.play().catch(() => {
+        // Браузер может заблокировать автозвук, если пользователь ещё не взаимодействовал со страницей.
+        // После нажатия на дверь звук обычно работает.
+      });
+    }
+
+    function highlightMissing(sentence) {
+      return sentence.replace("...", '<span class="missing">...</span>');
+    }
+
+    function renderTask() {
+      answered = false;
+      const task = tasks[current];
+
+      taskNumber.textContent = `Задание ${current + 1} из ${tasks.length}`;
+      sentenceBox.innerHTML = highlightMissing(task.sentence);
+      feedback.className = "feedback";
+      feedback.innerHTML = "";
+      nextBtn.disabled = true;
+      nextBtn.textContent = current === tasks.length - 1 ? "Показать результат →" : "Следующее задание →";
+      progressBar.style.width = `${(current / tasks.length) * 100}%`;
+
+      doors.innerHTML = "";
+      letters.forEach((letter) => {
+        const btn = document.createElement("button");
+        btn.className = "door-button";
+        btn.type = "button";
+        btn.setAttribute("aria-label", `Выбрать букву ${letter}`);
+        btn.innerHTML = `
+          <div class="door">
+            <img class="door-img" src="door.png" alt="" aria-hidden="true">
+            <div class="letter-badge">${letter}</div>
+          </div>
+        `;
+        btn.addEventListener("click", () => chooseDoor(btn, letter === task.correct, task));
+        doors.appendChild(btn);
+      });
+    }
+
+    function chooseDoor(button, isCorrect, task) {
+      if (answered) return;
+      answered = true;
+
+      const buttons = document.querySelectorAll(".door-button");
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (isCorrect) {
+        playSound(correctSound);
+        score++;
+        scoreBox.textContent = `Верно: ${score}`;
+        button.classList.add("open-animation");
+        feedback.className = "feedback good";
+        feedback.innerHTML = `<span class="emoji">✅</span><div>Дверь открылась! Правильное слово: «${task.word}».<small>${task.explain}</small></div>`;
+      } else {
+        playSound(wrongSound);
+        button.classList.add("shake");
+        feedback.className = "feedback bad";
+        feedback.innerHTML = `<span class="emoji">🔒</span><div>Эта дверь закрыта. Правильное слово: «${task.word}».<small>${task.explain}</small></div>`;
+      }
+
+      progressBar.style.width = `${((current + 1) / tasks.length) * 100}%`;
+      nextBtn.disabled = false;
+    }
+
+    function nextTask() {
+      current++;
+      if (current >= tasks.length) {
+        taskCard.classList.add("hide");
+        finishScreen.classList.add("show");
+        finalText.textContent = `Результат: ${score} из ${tasks.length}.`;
+        progressBar.style.width = "100%";
+        playSound(fanfareSound);
+      } else {
+        renderTask();
+      }
+    }
+
+    function restartGame() {
+      tasks = shuffleTasks(originalTasks);
+      current = 0;
+      score = 0;
+      scoreBox.textContent = "Верно: 0";
+      taskCard.classList.remove("hide");
+      finishScreen.classList.remove("show");
+      renderTask();
+    }
+
+    nextBtn.addEventListener("click", nextTask);
+    restartBtn.addEventListener("click", restartGame);
+
+    renderTask();
+  </script>
+</body>
+</html>
